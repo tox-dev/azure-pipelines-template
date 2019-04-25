@@ -1,0 +1,111 @@
+parameters:
+  jobs: []
+
+jobs:
+- ${{ each job in parameters.jobs }}:
+  - job: ${{ job.key }}
+    strategy:
+      matrix:
+        ${{ each env in job.value.toxenvs }}:
+          ${{ env }}:
+            TOXENV: ${{ env }}
+            ${{ if job.value.py }}:
+              py: ${{ job.value.py }}
+            ${{ if not(job.value.py) }}:
+              ${{ if or(eq(env, 'py27'), startsWith(env, 'py27-')) }}:
+                py: '2.7'
+                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
+              ${{ if or(eq(env, 'py34'), startsWith(env, 'py34-')) }}:
+                py: '3.4'
+                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
+              ${{ if or(eq(env, 'py35'), startsWith(env, 'py35-')) }}:
+                py: '3.5'
+              ${{ if or(eq(env, 'py36'), startsWith(env, 'py36-')) }}:
+                py: '3.6'
+              ${{ if or(eq(env, 'py37'), startsWith(env, 'py37-')) }}:
+                py: '3.7'
+              ${{ if or(eq(env, 'pypy'), startsWith(env, 'pypy-')) }}:
+                py: 'pypy2'
+                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
+              ${{ if or(eq(env, 'pypy3'), startsWith(env, 'pypy3-')) }}:
+                py: 'pypy3'
+              ${{ if or(eq(env, 'py38'), startsWith(env, 'py38-')) }}:
+                py: '3.7'
+                ispy38: true
+    pool:
+      ${{ if job.value.image }}:
+        vmImage: ${{ job.value.image }}
+      ${{ if not(job.value.image) }}:
+        ${{ if eq(job.key, 'linux') }}:
+          vmImage: 'Ubuntu-16.04'
+        ${{ if eq(job.key, 'windows') }}:
+          vmImage: 'windows-2019'
+        ${{ if eq(job.key, 'macOs') }}:
+          vmImage: 'macOS-latest'
+        ${{ if notIn(job.key, 'macOs', 'linux', 'windows') }}:
+          vmImage: 'Ubuntu-16.04'
+
+    variables:
+      TMPDIR: $(Build.BinariesDirectory)
+      PIP_NO_WARN_SCRIPT_LOCATION: '0'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: $(py)
+        architecture: ${{ coalesce(job.value.architecture, 'x64') }}
+
+    - script: |
+        sudo add-apt-repository ppa:deadsnakes
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-distutils
+      condition: variables.ispy38
+      displayName: install python 3.8
+
+    - script: 'python -c "import sys; print(sys.version); print(sys.executable);"'
+      displayName: show python information
+
+    - script: "python -m pip install -U tox --user"
+      displayName: install tox
+
+    - script: 'python -m tox --notest -vv --skip-missing-interpreters false'
+      displayName: generate tox test environment
+
+    - script: 'python -m tox'
+      displayName: run tox test environment
+
+    - bash: 'printf "##vso[task.setVariable variable=junit]" && ([ -f $(System.DefaultWorkingDirectory)/.tox/junit.$(TOXENV).xml ] && printf yes || printf no) && echo ""'
+      displayName: check if junit file present
+
+    - task: PublishTestResults@2
+      displayName: publish test results via junit
+      condition: eq(variables.junit, 'yes')
+      inputs:
+        testResultsFormat: "JUnit"
+        testResultsFiles: '.tox/junit.$(TOXENV).xml'
+        testRunTitle: ${{ format('{0}-$(TOXENV)', job.value.image) }}
+
+    - ${{ if job.value.coverage }}:
+      - script:  ${{ format('python -m tox -e {0}', job.value.coverage) }}
+        displayName: create coverag report
+
+    - bash: 'printf "##vso[task.setVariable variable=coverage]" && ([ -f $(System.DefaultWorkingDirectory)/.tox/coverage.xml -o  -f $(System.DefaultWorkingDirectory)/.tox/.coverage ] && printf yes || printf no) && echo ""'
+      displayName: check if coverage file present
+
+    - task: CopyFiles@2
+      displayName: move coverage files into staging area
+      condition: eq(variables.coverage, 'yes')
+      inputs:
+        sourceFolder: $(System.DefaultWorkingDirectory)/.tox
+        contents: |
+          .coverage
+          coverage.xml
+        targetFolder: $(Build.StagingDirectory)
+
+    - task: PublishBuildArtifacts@1
+      displayName: publish coverage file
+      condition: eq(variables.coverage, 'yes')
+      inputs:
+        pathtoPublish: $(Build.ArtifactStagingDirectory)
+        ArtifactName: ${{ format('coverage-{0}-$(TOXENV)', job.value.image) }}
