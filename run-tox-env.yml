@@ -41,7 +41,7 @@ jobs:
         ${{ if eq(job.key, 'windows') }}:
           vmImage: 'windows-2019'
         ${{ if eq(job.key, 'macOs') }}:
-          vmImage: 'macOS-latest'
+          vmImage: 'macOS-10.14'
         ${{ if notIn(job.key, 'macOs', 'linux', 'windows') }}:
           vmImage: 'Ubuntu-16.04'
 
@@ -66,7 +66,7 @@ jobs:
     - script: 'python -c "import sys; print(sys.version); print(sys.executable);"'
       displayName: show python information
 
-    - script: "python -m pip install -U tox --user"
+    - script: "python -m pip install -U --user --force-reinstall tox"
       displayName: install tox
 
     - script: 'python -m tox --notest -vv --skip-missing-interpreters false'
@@ -75,8 +75,10 @@ jobs:
     - script: 'python -m tox'
       displayName: run tox test environment
 
-    - bash: 'printf "##vso[task.setVariable variable=junit]" && ([ -f $(System.DefaultWorkingDirectory)/.tox/junit.$(TOXENV).xml ] && printf yes || printf no) && echo ""'
+    - bash: 'printf "##vso[task.setVariable variable=junit]" && ([ -f junit.$(TOXENV).xml ] && printf yes || printf no) && echo ""'
+      condition: always()
       displayName: check if junit file present
+      workingDirectory: '$(System.DefaultWorkingDirectory)/.tox'
 
     - task: PublishTestResults@2
       displayName: publish test results via junit
@@ -84,14 +86,16 @@ jobs:
       inputs:
         testResultsFormat: "JUnit"
         testResultsFiles: '.tox/junit.$(TOXENV).xml'
-        testRunTitle: ${{ format('{0}-$(TOXENV)', job.value.image) }}
+        testRunTitle: 'junit-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
 
     - ${{ if job.value.coverage }}:
       - script:  ${{ format('python -m tox -e {0}', job.value.coverage) }}
         displayName: create coverag report
 
-    - bash: 'printf "##vso[task.setVariable variable=coverage]" && ([ -f $(System.DefaultWorkingDirectory)/.tox/coverage.xml -o  -f $(System.DefaultWorkingDirectory)/.tox/.coverage ] && printf yes || printf no) && echo ""'
+    - bash: 'printf "##vso[task.setVariable variable=coverage]" && ([ -f coverage.xml -o -f .coverage ] && printf yes || printf no) && echo ""'
       displayName: check if coverage file present
+      condition: always()
+      workingDirectory: '$(System.DefaultWorkingDirectory)/.tox'
 
     - task: CopyFiles@2
       displayName: move coverage files into staging area
@@ -108,4 +112,4 @@ jobs:
       condition: eq(variables.coverage, 'yes')
       inputs:
         pathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: ${{ format('coverage-{0}-$(TOXENV)', job.value.image) }}
+        ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
