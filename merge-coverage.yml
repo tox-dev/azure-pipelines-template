@@ -1,6 +1,7 @@
 parameters:
   dependsOn: []
   coverage: 'coverage'
+  tox_version: 'tox'
 
 jobs:
 - job: report_coverage
@@ -39,7 +40,7 @@ jobs:
           shutil.copy(str(coverage_file), str(destination))'
     displayName: move coverage files into .tox
 
-  - script: "python -m pip install -U --user --force-reinstall tox"
+  - script: ${{ format('python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
     displayName: install tox
 
   - script: 'python -m tox -e py -vv --sdistonly'

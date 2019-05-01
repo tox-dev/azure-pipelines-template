@@ -74,12 +74,13 @@ jobs:
 
 ### parameters
 
-At root level has a single ``jobs`` key. Inside this you can enlist groups of targets as maps. 
+At root level you can control with `tox_version` the tox version specifier to install, this defaults to latest in PyPi
+(`tox`). Beside this at the root level we have the ``jobs`` key. Inside this you can enlist groups of targets as maps. 
 The key is the name of the group. The values configure the target:
  
 - `toxenvs`: the list of `tox` environment names to run; must either:
-  - be equal to: `py27`, `py34`, `py35`, `py36`, `py37`, `py38`
-  - start with: `py27-`, `py34-`, `py35-`, `py36-`, `py37-`, `py38-`
+  - be equal to: `py27`, `py34`, `py35`, `py36`, `py37`, `py38`, `jython`, `pypy`, `pypy3`
+  - start with: `py27-`, `py34-`, `py35-`, `py36-`, `py37-`, `py38-`, `jython-`, `pypy-`, `pypy3`
 
 - `image`: specify the Azure pipelines image to use (determines the OS target); if not specified
   we'll use the groups key name to assign one:
@@ -89,9 +90,12 @@ The key is the name of the group. The values configure the target:
   - otherwise `Ubuntu-16.04`
 - `architecture`: either `x64` or `x86`) with default `x64` (only affects windows)
 - `coverage`: if set after running the test suite tox will run this tox target to generate a coverage report.
+- `before` steps to be run before invoking the tox environment (useful to provision additional dependencies).
 
-Note: for now, `python3.8` is only available on linux -- it is installed from
+Note, for now:
+- `python3.8` is only available on linux -- it is installed from
 [deadsnakes](https://github.com/deadsnakes).
+- `jython` is available from under Linux and MacOs.
 
 ## `merge-coverage.yml`
 
@@ -113,7 +117,8 @@ to the Azure Pipelines coverage report.
 
 ### parameters
 - `coverage` - tox target that generates the unified coverage report (default `coverage`)
-- `dependsOn` - environments this job depends on 
+- `dependsOn` - environments this job depends on
+- `tox_version` - the tox version specifier to use, defaults to latest 
 
 ## `publish-pypi.yml`
 

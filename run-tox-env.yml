@@ -1,85 +1,118 @@
 parameters:
   jobs: []
+  tox_version: 'tox'
+  before: []
+  env: []
 
 jobs:
 - ${{ each job in parameters.jobs }}:
-  - job: ${{ job.key }}
+  - job: ${{ coalesce(job.value.name, job.key) }}
     strategy:
       matrix:
-        ${{ each env in job.value.toxenvs }}:
-          ${{ env }}:
-            TOXENV: ${{ env }}
-            ${{ if job.value.py }}:
-              py: ${{ job.value.py }}
-            ${{ if not(job.value.py) }}:
-              ${{ if or(eq(env, 'py27'), startsWith(env, 'py27-')) }}:
-                py: '2.7'
-                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
-              ${{ if or(eq(env, 'py34'), startsWith(env, 'py34-')) }}:
-                py: '3.4'
-                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
-              ${{ if or(eq(env, 'py35'), startsWith(env, 'py35-')) }}:
-                py: '3.5'
-              ${{ if or(eq(env, 'py36'), startsWith(env, 'py36-')) }}:
-                py: '3.6'
-              ${{ if or(eq(env, 'py37'), startsWith(env, 'py37-')) }}:
-                py: '3.7'
-              ${{ if or(eq(env, 'pypy'), startsWith(env, 'pypy-')) }}:
-                py: 'pypy2'
-                PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
-              ${{ if or(eq(env, 'pypy3'), startsWith(env, 'pypy3-')) }}:
-                py: 'pypy3'
-              ${{ if or(eq(env, 'py38'), startsWith(env, 'py38-')) }}:
-                py: '3.7'
-                ispy38: true
+        ${{ if job.value.image }}:
+          ${{ each image in job.value.image }}:
+            ${{ image }}:
+              ${{ if eq(image, 'linux') }}:
+                image: 'Ubuntu-16.04'
+              ${{ if eq(image, 'windows') }}:
+                image: 'windows-2019'
+              ${{ if eq(image, 'macOs') }}:
+                image: 'macOS-10.14'
+              ${{ if notIn(image, 'macOs', 'linux', 'windows') }}:
+                image: ${{ coalesce(image, 'Ubuntu-16.04') }}
+        ${{ if not(job.value.image) }}:
+          linux:
+            image: 'Ubuntu-16.04'
     pool:
-      ${{ if job.value.image }}:
-        vmImage: ${{ job.value.image }}
-      ${{ if not(job.value.image) }}:
-        ${{ if eq(job.key, 'linux') }}:
-          vmImage: 'Ubuntu-16.04'
-        ${{ if eq(job.key, 'windows') }}:
-          vmImage: 'windows-2019'
-        ${{ if eq(job.key, 'macOs') }}:
-          vmImage: 'macOS-10.14'
-        ${{ if notIn(job.key, 'macOs', 'linux', 'windows') }}:
-          vmImage: 'Ubuntu-16.04'
+      vmImage: $[ variables['image'] ]
 
     variables:
       TMPDIR: $(Build.BinariesDirectory)
       PIP_NO_WARN_SCRIPT_LOCATION: '0'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      TOXENV: ${{ job.key }}
+      PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
 
     steps:
+    # checkout with submodules please
+    - checkout: self
+      displayName: checkout source code (with submodules)
+      submodules: true
+
+    # load tox
     - task: UsePythonVersion@0
+      displayName: get python for tox
       inputs:
-        versionSpec: $(py)
-        architecture: ${{ coalesce(job.value.architecture, 'x64') }}
+        versionSpec: '3.7'
+        addToPath: false
+      name: toxPython
 
-    - script: |
-        sudo add-apt-repository ppa:deadsnakes
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-distutils
-      condition: variables.ispy38
-      displayName: install python 3.8
+    - ${{ if parameters.tox_version }}:
+      - script: ${{ format('$(toxPython.pythonLocation)/python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
+        displayName: ${{ format('install {0} from PyPi', parameters.tox_version) }}
+    - ${{ if not(parameters.tox_version) }}:
+      - script: $(toxPython.pythonLocation)/python -m pip install -U --user --force-reinstall .
+        displayName: install tox inline
 
+    - script: $(toxPython.pythonLocation)/python -m tox --version
+      displayName: show tox version
+
+    # acquire target test Python
+    - ${{ if or(eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'p27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
+      - task: UsePythonVersion@0
+        displayName: ${{ format('provision target test python {0}', job.key) }}
+        inputs:
+          ${{ if job.value.py }}:
+            versionSpec: ${{ job.value.py }}
+          ${{ if not(job.value.py) }}:
+            ${{ if or(eq(job.key, 'py27'), startsWith(job.key, 'py27-')) }}:
+              versionSpec: '2.7'
+            ${{ if or(eq(job.key, 'py34'), startsWith(job.key, 'py34-')) }}:
+              versionSpec: '3.4'
+            ${{ if or(eq(job.key, 'py35'), startsWith(job.key, 'py35-')) }}:
+              versionSpec: '3.5'
+            ${{ if or(eq(job.key, 'py36'), startsWith(job.key, 'py36-')) }}:
+              versionSpec: '3.6'
+            ${{ if or(eq(job.key, 'py37'), startsWith(job.key, 'py37-')) }}:
+              versionSpec: '3.7'
+            ${{ if or(eq(job.key, 'pypy'), startsWith(job.key, 'pypy-')) }}:
+              versionSpec: 'pypy2'
+            ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
+              versionSpec: 'pypy3'
+          architecture: ${{ coalesce(job.value.architecture, 'x64') }}
+    - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-')) }}:
+      - script: |
+          sudo add-apt-repository ppa:deadsnakes
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-distutils
+        displayName: 'provision python 3.8'
+    - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
+      - script: wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar -O $(Agent.ToolsDirectory)/jython.jar
+        displayName: download jython
+      - script: java -jar $(Agent.ToolsDirectory)/jython.jar -sd $(Agent.ToolsDirectory)/jython -e demo src doc
+        displayName: install jython
+      - script: echo "##vso[task.setvariable variable=PATH]$(Agent.ToolsDirectory)/jython/bin:$(PATH)"
+        displayName: add to PATH jython
+      - script: 'jython -c "import sys; print(sys.version_info); print(sys.platform)'
+        displayName: show jython information
     - script: 'python -c "import sys; print(sys.version); print(sys.executable);"'
       displayName: show python information
 
-    - script: "python -m pip install -U --user --force-reinstall tox"
-      displayName: install tox
+    # allow user to plugin further improvements
+    - ${{ if job.value.before }}:
+      - ${{ job.value.before }}
 
-    - script: 'python -m tox --notest -vv --skip-missing-interpreters false'
+    # run tests
+    - script: '$(toxPython.pythonLocation)/python -m tox --notest -vv --skip-missing-interpreters false'
       displayName: generate tox test environment
-
-    - script: 'python -m tox'
+    - script: '$(toxPython.pythonLocation)/python -m tox'
       displayName: run tox test environment
 
+    # upload junit result if present
     - bash: 'printf "##vso[task.setVariable variable=junit]" && ([ -f junit.$(TOXENV).xml ] && printf yes || printf no) && echo ""'
       condition: always()
       displayName: check if junit file present
       workingDirectory: '$(System.DefaultWorkingDirectory)/.tox'
-
     - task: PublishTestResults@2
       displayName: publish test results via junit
       condition: eq(variables.junit, 'yes')
@@ -88,15 +121,14 @@ jobs:
         testResultsFiles: '.tox/junit.$(TOXENV).xml'
         testRunTitle: 'junit-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
 
+    # upload coverage artifacts if present
     - ${{ if job.value.coverage }}:
-      - script:  ${{ format('python -m tox -e {0}', job.value.coverage) }}
+      - script:  ${{ format('$(toxPython.pythonLocation)/python -m tox -e {0}', job.value.coverage) }}
         displayName: create coverag report
-
     - bash: 'printf "##vso[task.setVariable variable=coverage]" && ([ -f coverage.xml -o -f .coverage ] && printf yes || printf no) && echo ""'
       displayName: check if coverage file present
       condition: always()
       workingDirectory: '$(System.DefaultWorkingDirectory)/.tox'
-
     - task: CopyFiles@2
       displayName: move coverage files into staging area
       condition: eq(variables.coverage, 'yes')
@@ -106,7 +138,6 @@ jobs:
           .coverage
           coverage.xml
         targetFolder: $(Build.StagingDirectory)
-
     - task: PublishBuildArtifacts@1
       displayName: publish coverage file
       condition: eq(variables.coverage, 'yes')
