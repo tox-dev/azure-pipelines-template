@@ -1,5 +1,7 @@
 # tox azure-pipeline-template
 
+[![Build Status](https://dev.azure.com/toxdev/azure-pipelines-template/_apis/build/status/tox-dev.azure-pipelines-template?branchName=master)](https://dev.azure.com/toxdev/azure-pipelines-template/_build/latest?definitionId=11&branchName=master)
+
 This a template that will help simplify the [Azure Pipelines](https://azure.microsoft.com/en-gb/services/devops/pipelines/)
 configuration when using [tox](https://tox.readthedocs.org) to drive your CI.
 
@@ -34,41 +36,35 @@ This job template will run tox for a given set of tox targets on given platform 
 Features and functionality:
 
 - each specified toxenv target maps to a single Azure Pipelines job
-- provision a python for the job
-- install tox into that python
+- make tox available in the job: provision a python (``3.7``) and install a specified tox into that
+- provision a python needed for the target tox environment
 - provision the target tox environment (create environment, install dependencies)
 - invoke the tox target
 - if a junit file is found under `.tox\junit.{toxenv}.xml` upload it as test report
-- if a coverage file is found under `.tox\coverage.xml` or `.tox\.coverage` upload it as build artifact
+- if coverage is requested, run a tox target that should generate the `.tox\coverage.xml` or `.tox\.coverage`
+ and upload those as a build artifact
+- if coverage was requested queue a job that post all toxenv runs will merge all the coverages via a tox target
 
 ### example
 
 The following example will run `py36` and `py37` on Windows, Linux and MacOs. It will also invoke
-`fix_lint` and `docs` target with `python3.7` on Linux. Note how the root level name can be used
-to automatically specify the target platform (defaults to Linux).
+`fix_lint` and `docs` target with `python3.7` on Linux.
 
 ```yaml
 jobs:
 - template: run-tox-env.yml@tox
   parameters:
+    tox_version: ''
     jobs:
-      windows:
-        toxenvs:
-        - py37
-        - py36
-      linux:
-        toxenvs:
-        - py37
-        - py36
-      macOs:
-        toxenvs:
-        - py37
-        - py27
-      check:
-        py: '3.7'
-        toxenvs:
-        - fix_lint
-        - docs
+      fix_lint: null
+      docs: null
+      py37:
+        image: [linux, windows, macOs]
+      py36:
+        image: [linux, windows, macOs]
+    coverage:
+      with_toxenv: 'coverage' # generate .tox/.coverage, .tox/coverage.xml after test run
+      for_envs: [py37, py36, py35, py34, py27]
 ```
 
 

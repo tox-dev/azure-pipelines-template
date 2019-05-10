@@ -4,10 +4,12 @@ parameters:
   coverage:
     with_toxenv: ''
     for_envs: []
+  dependsOn: []
 
 jobs:
 - ${{ each job in parameters.jobs }}:
   - job: ${{ coalesce(job.value.name, job.key) }}
+    dependsOn: ${{ coalesce(job.value.dependsOn, parameters.dependsOn) }}
     strategy:
       matrix:
         ${{ if job.value.image }}:
@@ -15,15 +17,20 @@ jobs:
             ${{ image }}:
               ${{ if eq(image, 'linux') }}:
                 image: 'Ubuntu-16.04'
+                image_name: 'linux'
               ${{ if eq(image, 'windows') }}:
                 image: 'windows-2019'
+                image_name: 'windows'
               ${{ if eq(image, 'macOs') }}:
                 image: 'macOS-10.14'
+                image_name: 'macOs'
               ${{ if notIn(image, 'macOs', 'linux', 'windows') }}:
                 image: ${{ coalesce(image, 'Ubuntu-16.04') }}
+                image_name: ${{ coalesce(image, 'linux') }}
         ${{ if not(job.value.image) }}:
           linux:
             image: 'Ubuntu-16.04'
+            image_name: 'linux'
     pool:
       vmImage: $[ variables['image'] ]
 
@@ -99,7 +106,11 @@ jobs:
     - script: 'python -c "import sys; print(sys.version); print(sys.executable);"'
       displayName: show python information
 
-    # allow user to plugin further improvements
+    # allow user to run global before
+    - ${{ if parameters.before }}:
+      - ${{ parameters.before }}
+
+    # allow user to run per job setup
     - ${{ if job.value.before }}:
       - ${{ job.value.before }}
 
@@ -141,7 +152,7 @@ jobs:
           ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
 
 - ${{ if and(parameters.coverage.with_toxenv, parameters.coverage.for_envs) }}:
-  - template: merge-coverage.yml@tox
+  - template: merge-coverage.yml
     parameters:
       tox_version: ${{ parameters.tox_version }}
       toxenv: ${{ parameters.coverage.with_toxenv }}

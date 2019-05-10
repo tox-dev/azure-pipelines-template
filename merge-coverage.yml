@@ -40,8 +40,12 @@ jobs:
           shutil.copy(str(coverage_file), str(destination))'
     displayName: move coverage files into .tox
 
-  - script: ${{ format('python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
-    displayName: install tox
+  - ${{ if parameters.tox_version }}:
+    - script: ${{ format('python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
+      displayName: ${{ format('install {0} from PyPi', parameters.tox_version) }}
+  - ${{ if not(parameters.tox_version) }}:
+    - script: python -m pip install -U --user --force-reinstall .
+      displayName: install tox inline
 
   - script: 'python -m tox -e py -vv --sdistonly'
     displayName: run package build to ensure generated files present
