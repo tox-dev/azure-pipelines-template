@@ -1,8 +1,9 @@
 parameters:
   jobs: []
   tox_version: 'tox'
-  before: []
-  env: []
+  coverage:
+    with_toxenv: ''
+    for_envs: []
 
 jobs:
 - ${{ each job in parameters.jobs }}:
@@ -122,25 +123,26 @@ jobs:
         testRunTitle: 'junit-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
 
     # upload coverage artifacts if present
-    - ${{ if job.value.coverage }}:
-      - script:  ${{ format('$(toxPython.pythonLocation)/python -m tox -e {0}', job.value.coverage) }}
+    - ${{ if and(parameters.coverage.with_toxenv, containsValue(parameters.coverage.for_envs, job.key)) }}:
+      - script:  ${{ format('$(toxPython.pythonLocation)/python -m tox -e {0} --skip-missing-interpreters false', parameters.coverage.with_toxenv) }}
         displayName: create coverag report
-    - bash: 'printf "##vso[task.setVariable variable=coverage]" && ([ -f coverage.xml -o -f .coverage ] && printf yes || printf no) && echo ""'
-      displayName: check if coverage file present
-      condition: always()
-      workingDirectory: '$(System.DefaultWorkingDirectory)/.tox'
-    - task: CopyFiles@2
-      displayName: move coverage files into staging area
-      condition: eq(variables.coverage, 'yes')
-      inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)/.tox
-        contents: |
-          .coverage
-          coverage.xml
-        targetFolder: $(Build.StagingDirectory)
-    - task: PublishBuildArtifacts@1
-      displayName: publish coverage file
-      condition: eq(variables.coverage, 'yes')
-      inputs:
-        pathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
+      - task: CopyFiles@2
+        displayName: move coverage files into staging area
+        inputs:
+          sourceFolder: $(System.DefaultWorkingDirectory)/.tox
+          contents: |
+            .coverage
+            coverage.xml
+          targetFolder: $(Build.StagingDirectory)
+      - task: PublishBuildArtifacts@1
+        displayName: publish coverage file
+        inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
+
+- ${{ if and(parameters.coverage.with_toxenv, parameters.coverage.for_envs) }}:
+  - template: merge-coverage.yml@tox
+    parameters:
+      tox_version: ${{ parameters.tox_version }}
+      toxenv: ${{ parameters.coverage.with_toxenv }}
+      dependsOn: ${{ parameters.coverage.for_envs }}

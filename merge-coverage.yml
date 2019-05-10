@@ -1,6 +1,6 @@
 parameters:
   dependsOn: []
-  coverage: 'coverage'
+  toxenv: 'coverage'
   tox_version: 'tox'
 
 jobs:
@@ -11,7 +11,7 @@ jobs:
   variables:
     TMPDIR: $(Build.BinariesDirectory)
     PIP_NO_WARN_SCRIPT_LOCATION: '0'
-    TOXENV: ${{ parameters.coverage }}
+    TOXENV: ${{ parameters.toxenv }}
   steps:
   - task: DownloadBuildArtifacts@0
     displayName: download coverage files for run

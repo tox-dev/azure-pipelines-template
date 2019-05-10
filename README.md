@@ -9,7 +9,7 @@ configuration when using [tox](https://tox.readthedocs.org) to drive your CI.
 
 It is suggested to use a generic name, such as `github` so forks can also configure the same.
 
-You can find this in `Project Settings` => `Service connections` in the Azure Devops dashboard for your project. 
+You can find this in `Project Settings` => `Service connections` in the Azure Devops dashboard for your project.
 Project settings is located in the bottom left corner of the UI as of 2019-04-30. Below I'm using the endpoint name
 `github`.
 
@@ -30,7 +30,7 @@ this will make the templates in this repository available in the `tox` namespace
 # job templates
 
 ## `run-tox-env.yml`
-This job template will run tox for a given set of tox targets on given platform (new in `0.1`). 
+This job template will run tox for a given set of tox targets on given platform (new in `0.1`).
 Features and functionality:
 
 - each specified toxenv target maps to a single Azure Pipelines job
@@ -46,7 +46,7 @@ Features and functionality:
 The following example will run `py36` and `py37` on Windows, Linux and MacOs. It will also invoke
 `fix_lint` and `docs` target with `python3.7` on Linux. Note how the root level name can be used
 to automatically specify the target platform (defaults to Linux).
-               
+
 ```yaml
 jobs:
 - template: run-tox-env.yml@tox
@@ -75,9 +75,9 @@ jobs:
 ### parameters
 
 At root level you can control with `tox_version` the tox version specifier to install, this defaults to latest in PyPi
-(`tox`). Beside this at the root level we have the ``jobs`` key. Inside this you can enlist groups of targets as maps. 
+(`tox`). Beside this at the root level we have the ``jobs`` key. Inside this you can enlist groups of targets as maps.
 The key is the name of the group. The values configure the target:
- 
+
 - `toxenvs`: the list of `tox` environment names to run; must either:
   - be equal to: `py27`, `py34`, `py35`, `py36`, `py37`, `py38`, `jython`, `pypy`, `pypy3`
   - start with: `py27-`, `py34-`, `py35-`, `py36-`, `py37-`, `py38-`, `jython-`, `pypy-`, `pypy3`
@@ -101,7 +101,7 @@ Note, for now:
 
 This job template will download coverage files attached to the build (uploaded by `run-tox-env.yml`)
 and use target tox environment configured to generate a unified report. This then will be uploaded
-to the Azure Pipelines coverage report. 
+to the Azure Pipelines coverage report.
 
 ### example
 
@@ -118,12 +118,12 @@ to the Azure Pipelines coverage report.
 ### parameters
 - `coverage` - tox target that generates the unified coverage report (default `coverage`)
 - `dependsOn` - environments this job depends on
-- `tox_version` - the tox version specifier to use, defaults to latest 
+- `tox_version` - the tox version specifier to use, defaults to latest
 
 ## `publish-pypi.yml`
 
 This job template will publish the Python package in the current folder (both sdist and wheel)
-via the PEP-517/8 build mechanism and twine. 
+via the PEP-517/8 build mechanism and twine.
 
 ### example
 
@@ -140,5 +140,5 @@ via the PEP-517/8 build mechanism and twine.
 
 ### parameters
 - `external_feed` - the external feed to upload
-- `pypi_remote` - the pypi remote to upload to 
-- `dependsOn` - environments this job depends on 
+- `pypi_remote` - the pypi remote to upload to
+- `dependsOn` - environments this job depends on
