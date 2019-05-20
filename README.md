@@ -24,7 +24,7 @@ resources:
     type: github
     endpoint: github
     name: tox-dev/azure-pipelines-template
-    ref: refs/tags/0.1
+    ref: refs/tags/0.2
 ```
 
 this will make the templates in this repository available in the `tox` namespace. Note the ref allows you to pin
