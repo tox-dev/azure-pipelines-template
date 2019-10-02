@@ -92,7 +92,7 @@ jobs:
       - script: |
           sudo add-apt-repository ppa:deadsnakes
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-distutils
+          sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-venv python3.8-distutils
         displayName: 'provision python 3.8'
     - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
       - script: wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar -O $(Agent.ToolsDirectory)/jython.jar
