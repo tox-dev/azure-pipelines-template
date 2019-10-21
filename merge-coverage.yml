@@ -5,7 +5,7 @@ parameters:
 
 jobs:
 - job: report_coverage
-  pool: {vmImage: "Ubuntu-16.04"}
+  pool: {vmImage: "ubuntu-latest"}
   condition: always()
   dependsOn: ${{ parameters.dependsOn }}
   variables:

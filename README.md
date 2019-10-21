@@ -100,10 +100,10 @@ At root level you can control with:
   - the value contains:
 
        -  `image` to list an array of targeted architecture, the array elements are mapped as:
-          - `linux` - `Ubuntu-16.04`
-          - `windows` - `windows-2019`
+          - `linux` - `ubuntu-latest`
+          - `windows` - `windows-latest`
           - `osx` - `macOS-latest`
-          - otherwise the value if set, fallback to `Ubuntu-16.04`.
+          - otherwise the value if set, fallback to `ubuntu-latest`.
 
        - `py` - determines the python to provision for running the environment, if not set will be derived from the key:
            - ``py27`` or starts with ``py27-`` - Python 2.7

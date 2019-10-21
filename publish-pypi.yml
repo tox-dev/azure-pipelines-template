@@ -7,7 +7,7 @@ jobs:
 - job: publish
   dependsOn: ${{ parameters.dependsOn }}
   condition: succeeded()
-  pool: {vmImage: 'Ubuntu-16.04'}
+  pool: {vmImage: 'ubuntu-latest'}
   variables:
     TMPDIR: $(Build.BinariesDirectory)
     PIP_NO_WARN_SCRIPT_LOCATION: '0'
