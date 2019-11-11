@@ -90,6 +90,9 @@ jobs:
             ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
               versionSpec: 'pypy3'
           architecture: ${{ coalesce(job.value.architecture, 'x64') }}
+   - ${{ if or(eq(job.key, 'py27'), startsWith(job.key, 'py27-')) }}:
+      - script: choco install vcpython27 --yes
+        displayName: install vcpython27
     - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
       - script: wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar -O $(Agent.ToolsDirectory)/jython.jar
         displayName: download jython
