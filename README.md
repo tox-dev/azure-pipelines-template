@@ -112,8 +112,6 @@ At root level you can control with:
            - ``py36`` or starts with ``py36-`` - Python 3.6
            - ``py37`` or starts with ``py37-`` - Python 3.7
            - ``py38`` or starts with ``py38-`` - Python 3.8
-           - ``py39`` or starts with ``py39-`` - Python 3.9 latest pre-release (only available on linux -- it is
-              installed from [deadsnakes](https://github.com/deadsnakes))
            - ``pypy`` or starts with ``pypy-`` - PyPy 2
            - ``pypy3`` or starts with ``pypy3-`` - PyPy 3
            - `jython` - Jython is available from under Linux and MacOs.

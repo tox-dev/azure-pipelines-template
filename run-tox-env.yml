@@ -90,12 +90,6 @@ jobs:
             ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
               versionSpec: 'pypy3'
           architecture: ${{ coalesce(job.value.architecture, 'x64') }}
-    - ${{ if or(eq(job.key, 'py39'), startsWith(job.key, 'py39-')) }}:
-      - script: |
-          sudo add-apt-repository ppa:deadsnakes
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3.9-dev python3.9-venv python3.9-distutils
-          displayName: 'provision python 3.9'
     - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
       - script: wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar -O $(Agent.ToolsDirectory)/jython.jar
         displayName: download jython
