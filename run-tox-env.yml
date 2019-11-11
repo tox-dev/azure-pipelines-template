@@ -51,7 +51,7 @@ jobs:
     - task: UsePythonVersion@0
       displayName: get python for tox
       inputs:
-        versionSpec: '3.7'
+        versionSpec: '3.8'
         addToPath: false
       name: toxPython
 
@@ -66,7 +66,7 @@ jobs:
       displayName: show tox version
 
     # acquire target test Python
-    - ${{ if or(eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'p27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
+    - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-'), eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'p27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
       - task: UsePythonVersion@0
         displayName: ${{ format('provision target test python {0}', job.key) }}
         inputs:
@@ -83,17 +83,13 @@ jobs:
               versionSpec: '3.6'
             ${{ if or(eq(job.key, 'py37'), startsWith(job.key, 'py37-')) }}:
               versionSpec: '3.7'
+            ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-')) }}:
+              versionSpec: '3.8'
             ${{ if or(eq(job.key, 'pypy'), startsWith(job.key, 'pypy-')) }}:
               versionSpec: 'pypy2'
             ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
               versionSpec: 'pypy3'
           architecture: ${{ coalesce(job.value.architecture, 'x64') }}
-    - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-')) }}:
-      - script: |
-          sudo add-apt-repository ppa:deadsnakes
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3.8-dev python3.8-venv python3.8-distutils
-        displayName: 'provision python 3.8'
     - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
       - script: wget http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.1/jython-installer-2.7.1.jar -O $(Agent.ToolsDirectory)/jython.jar
         displayName: download jython

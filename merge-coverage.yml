@@ -24,7 +24,7 @@ jobs:
   - task: UsePythonVersion@0
     displayName: setup python
     inputs:
-      versionSpec: 3.7
+      versionSpec: 3.8
 
   - script: |
       python -c '

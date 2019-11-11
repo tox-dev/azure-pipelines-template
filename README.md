@@ -36,7 +36,7 @@ the template version you want, you can use ``refs/master`` if you want latest un
 
 #### Assumptions
 
-tox will run under `Python 3.7`. tox environments generate Junit file under `.tox\junit.{toxenv}.xml`.
+tox will run under `Python 3.8`. tox environments generate Junit file under `.tox\junit.{toxenv}.xml`.
 Environments tracking coverage data generate will have another tox environment to normalize/merge coverage files.
 These should be invoked after test suit runs, and one final time to merge all the sub-coverage files when all
 specified tox environments finished (independent their outcome).
@@ -49,7 +49,7 @@ Features and functionality:
 - each specified toxenv target maps to a single Azure Pipelines job, but split over multiple architectures via the
   image matrix (each matrix will set the `image_name` variable to `macOs`, `linux` or `windows`
   depending on the image used)
-- make tox available in the job: provision a python (`3.7`) and install a specified tox into that
+- make tox available in the job: provision a python (`3.8`) and install a specified tox into that
 - provision a python needed for the target tox environment
 - provision the target tox environment (create environment, install dependencies)
 - invoke the tox target
@@ -64,7 +64,7 @@ Features and functionality:
 ### example
 
 The following example will run `py36` and `py37` on Windows, Linux and MacOs. It will also invoke
-`fix_lint` and `docs` target with `python3.7` on Linux. It will also run the the `coverage` tox environment
+`fix_lint` and `docs` target with `python3.8` on Linux. It will also run the the `coverage` tox environment
 for `py37` and `py36`, and then save as build artifacts files `.tox/.coverage` and `.tox/coverage.xml`:
 
 ```yaml
@@ -111,15 +111,14 @@ At root level you can control with:
            - ``py35`` or starts with ``py35-`` - Python 3.5
            - ``py36`` or starts with ``py36-`` - Python 3.6
            - ``py37`` or starts with ``py37-`` - Python 3.7
-           - ``py38`` or starts with ``py38-`` - Python 3.8 latest pre-release (only available on linux -- it is
-              installed from [deadsnakes](https://github.com/deadsnakes))
+           - ``py38`` or starts with ``py38-`` - Python 3.8
            - ``pypy`` or starts with ``pypy-`` - PyPy 2
            - ``pypy3`` or starts with ``pypy3-`` - PyPy 3
            - `jython` - Jython is available from under Linux and MacOs.
        - `architecture`: Python architecture (either `x64` or `x86`) with default `x64` (only affects windows)
        - `before` steps to be run before invoking this tox environment (useful to provision additional dependencies)
 
-- `coverage` - if set runs a tox environment (`with_toxenv` - must run with `python3.7`) to normalize coverage data
+- `coverage` - if set runs a tox environment (`with_toxenv` - must run with `python3.8`) to normalize coverage data
   (must generate `.tox/.coverage` and `.tox/coverage.xml`) after all environments within ``for_envs``. It also enqueues
    a final job to use `with_toxenv` to merge the coverage files under the name `report_coverage`.
 
