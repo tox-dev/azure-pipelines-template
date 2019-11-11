@@ -122,6 +122,8 @@ At root level you can control with:
   (must generate `.tox/.coverage` and `.tox/coverage.xml`) after all environments within ``for_envs``. It also enqueues
    a final job to use `with_toxenv` to merge the coverage files under the name `report_coverage`.
 
+Note python 2 (``py27`` or ``pypy``) this will also trigger install of ``vcpython27`` via ``choco``.
+
 ## `publish-pypi.yml`
 
 #### Assumptions
