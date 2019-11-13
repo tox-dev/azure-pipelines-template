@@ -38,6 +38,7 @@ jobs:
       TMPDIR: $(Agent.TempDirectory)
       PIP_NO_WARN_SCRIPT_LOCATION: '0'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/pip
       TOXENV: ${{ job.key }}
       PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
 
@@ -54,6 +55,12 @@ jobs:
         versionSpec: '3.8'
         addToPath: false
       name: toxPython
+
+    - task: CacheBeta@0
+      displayName: "pip: cache"
+      inputs:
+        key: pip | ${{ job.key }} | $(Agent.OS)
+        path: $(PIP_CACHE_DIR)
 
     - script: $(toxPython.pythonLocation)/python -m pip install -U --user pip
       displayName: "tox: upgrade pip"
