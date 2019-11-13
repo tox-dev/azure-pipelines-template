@@ -35,7 +35,7 @@ jobs:
       vmImage: $[ variables['image'] ]
 
     variables:
-      TMPDIR: $(Build.BinariesDirectory)
+      TMPDIR: $(Agent.TempDirectory)
       PIP_NO_WARN_SCRIPT_LOCATION: '0'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
       TOXENV: ${{ job.key }}
@@ -49,21 +49,24 @@ jobs:
 
     # load tox
     - task: UsePythonVersion@0
-      displayName: get python for tox
+      displayName: "tox: get python"
       inputs:
         versionSpec: '3.8'
         addToPath: false
       name: toxPython
 
+    - script: $(toxPython.pythonLocation)/python -m pip install -U --user pip
+      displayName: "tox: upgrade pip"
+
     - ${{ if parameters.tox_version }}:
       - script: ${{ format('$(toxPython.pythonLocation)/python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
-        displayName: ${{ format('install {0} from PyPi', parameters.tox_version) }}
+        displayName: "${{ format('tox: install {0} from PyPi', parameters.tox_version) }}"
     - ${{ if not(parameters.tox_version) }}:
-      - script: $(toxPython.pythonLocation)/python -m pip install -U --user --force-reinstall .
-        displayName: install tox inline
+      - script: $(toxPython.pythonLocation)/python -m pip install -U --user --force-reinstall . -v
+        displayName: "tox: install inline"
 
-    - script: $(toxPython.pythonLocation)/python -m tox --version
-      displayName: show tox version
+    - script: $(toxPython.pythonLocation)/python -m tox -av
+      displayName: "tox: provision and show envs"
 
     # acquire target test Python
     - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-'), eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'p27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
