@@ -141,7 +141,7 @@ jobs:
     # upload coverage artifacts if present
     - ${{ if and(parameters.coverage.with_toxenv, containsValue(parameters.coverage.for_envs, job.key)) }}:
       - script:  ${{ format('$(toxPython.pythonLocation)/python -m tox -e {0} --skip-missing-interpreters false', parameters.coverage.with_toxenv) }}
-        displayName: create coverag report
+        displayName: create coverage report
       - task: CopyFiles@2
         displayName: move coverage files into staging area
         inputs:
