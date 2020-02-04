@@ -155,6 +155,10 @@ jobs:
         inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
+    
+    - ${{ if job.value.after }}:
+      - ${{ job.value.after }}
+
 
 - ${{ if and(parameters.coverage.with_toxenv, parameters.coverage.for_envs) }}:
   - template: merge-coverage.yml
