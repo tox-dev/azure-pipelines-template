@@ -38,8 +38,10 @@ jobs:
       TMPDIR: $(Agent.TempDirectory)
       PIP_NO_WARN_SCRIPT_LOCATION: '0'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
-      TOXENV: ${{ job.key }}
+      TOXENV: ${{ coalesce(job.value.tox_env, job.key) }}
       PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
+      ${{ if job.value.variables }}:
+        ${{ job.value.variables }}
 
     steps:
     # checkout with submodules please
@@ -155,7 +157,7 @@ jobs:
         inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
-    
+
     - ${{ if job.value.after }}:
       - ${{ job.value.after }}
 
