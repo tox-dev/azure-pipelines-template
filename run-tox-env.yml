@@ -90,6 +90,16 @@ jobs:
             ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
               versionSpec: 'pypy3'
           architecture: ${{ coalesce(job.value.architecture, 'x64') }}
+    - ${{ if eq(job.value.py, 'brew@python3') }}:
+        - script: 'brew install python@3'
+          displayName: 'provision target test python via homebrew python@3'
+        - script: echo "##vso[task.setvariable variable=PATH]/usr/local/opt/python@3:$(PATH)"
+          displayName: add python@3 to PATH
+    - ${{ if eq(job.value.py, 'brew@python2') }}:
+      - script: 'brew install python@2'
+        displayName: 'provision target test python via homebrew python@2'
+      - script: echo "##vso[task.setvariable variable=PATH]/usr/local/opt/python@2:$(PATH)"
+        displayName: add python@2 to PATH
     - ${{ if or(eq(job.key, 'py39'), startsWith(job.key, 'py39-')) }}:
       - script: |
           sudo add-apt-repository ppa:deadsnakes
