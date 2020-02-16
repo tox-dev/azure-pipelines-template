@@ -115,8 +115,6 @@ jobs:
         displayName: add to PATH jython
       - script: 'jython -c "import sys; print(sys.version_info); print(sys.platform)'
         displayName: show jython information
-    - script: 'python -c "import sys; print(sys.version); print(sys.executable);"'
-      displayName: show python information
 
     # allow user to run global before
     - ${{ if parameters.before }}:
@@ -126,6 +124,8 @@ jobs:
     - ${{ if job.value.before }}:
       - ${{ job.value.before }}
 
+    - script: 'python -c "import sys; import os; print(\"\n\".join(os.environ[\"PATH\"].split(os.pathsep))); print(sys.version); print(sys.executable);"'
+      displayName: show python information
     - script: $(toxPython.pythonLocation)/python -m tox -av
       displayName: "tox: provision and show envs"
 
