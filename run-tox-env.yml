@@ -38,7 +38,7 @@ jobs:
       TMPDIR: $(Agent.TempDirectory)
       PIP_NO_WARN_SCRIPT_LOCATION: '0'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
-      TOXENV: ${{ job.key }}
+      TOXENV: ${{ coalesce(job.value.toxenv, job.key) }}
       PYTHONWARNINGS: 'ignore:::pip._internal.cli.base_command'
 
     steps:
