@@ -155,7 +155,7 @@ jobs:
         inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           ArtifactName: 'coverage-$(Agent.OS)-$(Agent.OSArchitecture)-$(TOXENV)'
-    
+
     - ${{ if job.value.after }}:
       - ${{ job.value.after }}
 
