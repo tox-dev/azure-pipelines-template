@@ -69,7 +69,7 @@ jobs:
       displayName: "tox: provision and show envs"
 
     # acquire target test Python
-    - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-'), eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'p27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
+    - ${{ if or(eq(job.key, 'py38'), startsWith(job.key, 'py38-'), eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key, 'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key, 'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'py27-'), eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py, '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}:
       - task: UsePythonVersion@0
         displayName: ${{ format('provision target test python {0}', job.key) }}
         inputs:
