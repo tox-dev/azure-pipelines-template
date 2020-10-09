@@ -1,64 +1,64 @@
 parameters:
   dependsOn: []
-  toxenv: "coverage"
-  tox_version: "tox"
+  toxenv: 'coverage'
+  tox_version: 'tox'
 
 jobs:
-  - job: report_coverage
-    pool: { vmImage: "ubuntu-latest" }
-    condition: always()
-    dependsOn: ${{ parameters.dependsOn }}
-    variables:
-      TMPDIR: $(Build.BinariesDirectory)
-      PIP_NO_WARN_SCRIPT_LOCATION: "0"
-      TOXENV: ${{ parameters.toxenv }}
-    steps:
-      - task: DownloadBuildArtifacts@0
-        displayName: download coverage files for run
-        inputs:
-          buildType: current
-          downloadType: specific
-          itemPattern: coverage-*/*
-          downloadPath: $(Build.StagingDirectory)
+- job: report_coverage
+  pool: {vmImage: "ubuntu-latest"}
+  condition: always()
+  dependsOn: ${{ parameters.dependsOn }}
+  variables:
+    TMPDIR: $(Build.BinariesDirectory)
+    PIP_NO_WARN_SCRIPT_LOCATION: '0'
+    TOXENV: ${{ parameters.toxenv }}
+  steps:
+  - task: DownloadBuildArtifacts@0
+    displayName: download coverage files for run
+    inputs:
+      buildType: current
+      downloadType: specific
+      itemPattern: coverage-*/*
+      downloadPath: $(Build.StagingDirectory)
 
-      - task: UsePythonVersion@0
-        displayName: setup python
-        inputs:
-          versionSpec: 3.9
+  - task: UsePythonVersion@0
+    displayName: setup python
+    inputs:
+      versionSpec: 3.8
 
-      - script: |
-          python -c '
-          from pathlib import Path
-          import shutil
+  - script: |
+      python -c '
+      from pathlib import Path
+      import shutil
 
-          from_folder = Path("$(Build.StagingDirectory)")
-          destination_folder = Path("$(System.DefaultWorkingDirectory)") / ".tox"
-          destination_folder.mkdir()
-          for coverage_file in from_folder.glob("*/.coverage"):
-              destination = destination_folder / f".coverage.{coverage_file.parent.name[9:]}"
-              print(f"{coverage_file} copy to {destination}")
-              shutil.copy(str(coverage_file), str(destination))'
-        displayName: move coverage files into .tox
+      from_folder = Path("$(Build.StagingDirectory)")
+      destination_folder = Path("$(System.DefaultWorkingDirectory)") / ".tox"
+      destination_folder.mkdir()
+      for coverage_file in from_folder.glob("*/.coverage"):
+          destination = destination_folder / f".coverage.{coverage_file.parent.name[9:]}"
+          print(f"{coverage_file} copy to {destination}")
+          shutil.copy(str(coverage_file), str(destination))'
+    displayName: move coverage files into .tox
 
-      - ${{ if parameters.tox_version }}:
-          - script: ${{ format('python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
-            displayName: ${{ format('install {0} from PyPi', parameters.tox_version) }}
-      - ${{ if not(parameters.tox_version) }}:
-          - script: python -m pip install -U --user --force-reinstall .
-            displayName: install tox inline
+  - ${{ if parameters.tox_version }}:
+    - script: ${{ format('python -m pip install -U --user --force-reinstall {0}', parameters.tox_version) }}
+      displayName: ${{ format('install {0} from PyPi', parameters.tox_version) }}
+  - ${{ if not(parameters.tox_version) }}:
+    - script: python -m pip install -U --user --force-reinstall .
+      displayName: install tox inline
 
-      - script: "python -m tox -e py -vv --sdistonly"
-        displayName: run package build to ensure generated files present
+  - script: 'python -m tox -e py -vv --sdistonly'
+    displayName: run package build to ensure generated files present
 
-      - script: "python -m tox --notest -vv --skip-missing-interpreters false"
-        displayName: generate coverage tox test environment
+  - script: 'python -m tox --notest -vv --skip-missing-interpreters false'
+    displayName: generate coverage tox test environment
 
-      - script: "python -m tox"
-        displayName: create coverag report via tox
+  - script: 'python -m tox'
+    displayName: create coverag report via tox
 
-      - task: PublishCodeCoverageResults@1
-        displayName: publish overall coverage report to Azure
-        inputs:
-          codeCoverageTool: "Cobertura"
-          summaryFileLocation: "$(System.DefaultWorkingDirectory)/.tox/coverage.xml"
-          failIfCoverageEmpty: true
+  - task: PublishCodeCoverageResults@1
+    displayName: publish overall coverage report to Azure
+    inputs:
+      codeCoverageTool: 'Cobertura'
+      summaryFileLocation: "$(System.DefaultWorkingDirectory)/.tox/coverage.xml"
+      failIfCoverageEmpty: true

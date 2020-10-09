@@ -4,15 +4,15 @@ trigger:
   batch: true
   branches:
     include:
-      - master
-      - refs/tags/*
+    - master
+    - refs/tags/*
 pr:
   branches:
     include:
-      - master
+    - master
 
 jobs:
-  - template: run-tox-env.yml
-    parameters:
-      jobs:
-        fix_lint: null
+- template: run-tox-env.yml
+  parameters:
+    jobs:
+      fix_lint: null
