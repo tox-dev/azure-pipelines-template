@@ -19,7 +19,9 @@ jobs:
                     image: "ubuntu-latest"
                     image_name: "linux"
                   ${{ if eq(image, 'windows') }}:
-                    image: "windows-latest"
+                    # stay on windows-2019 since windows-latest (2022) has
+                    # problems with building C-extensions
+                    image: "windows-2019"
                     image_name: "windows"
                   ${{ if eq(image, 'macOs') }}:
                     image: "macOS-latest"
