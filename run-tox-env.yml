@@ -19,7 +19,9 @@ jobs:
                     image: "ubuntu-latest"
                     image_name: "linux"
                   ${{ if eq(image, 'windows') }}:
-                    image: "windows-latest"
+                    # stay on windows-2019 since windows-latest (2022) has
+                    # problems with building C-extensions
+                    image: "windows-2019"
                     image_name: "windows"
                   ${{ if eq(image, 'macOs') }}:
                     image: "macOS-latest"
@@ -68,13 +70,16 @@ jobs:
                 displayName: "tox: install inline"
 
           # acquire target test Python
-          - ? ${{ if or(eq(job.key, 'py39'), startsWith(job.key, 'py39-'), eq(job.key, 'py38'), startsWith(job.key,
-              'py38-'), eq(job.key, 'py37'), startsWith(job.key, 'py37-'), eq(job.key, 'py36'), startsWith(job.key,
-              'py36-'), eq(job.key, 'py35'), startsWith(job.key, 'py35-'), eq(job.key, 'py34'), startsWith(job.key,
-              'py34-'), eq(job.key, 'py27'), startsWith(job.key, 'py27-'), eq(job.key, 'pypy'), startsWith(job.key,
-              'pypy-'), eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'), eq(job.value.py, '2.7'), eq(job.value.py,
-              '3.4'), eq(job.value.py, '3.5'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'), eq(job.value.py,
-              'pypy2'), eq(job.value.py, 'pypy3')) }}
+          - ? ${{ if or(eq(job.key, 'py310'), startsWith(job.key, 'py310-'),
+              eq(job.key, 'py39'), startsWith(job.key, 'py39-'),
+              eq(job.key, 'py38'), startsWith(job.key, 'py38-'),
+              eq(job.key, 'py37'), startsWith(job.key, 'py37-'),
+              eq(job.key, 'py36'), startsWith(job.key, 'py36-'),
+              eq(job.key, 'py27'), startsWith(job.key, 'py27-'),
+              eq(job.key, 'pypy'), startsWith(job.key, 'pypy-'),
+              eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-'),
+              eq(job.value.py, '2.7'), eq(job.value.py, '3.6'), eq(job.value.py, '3.7'),
+              eq(job.value.py, 'pypy2'), eq(job.value.py, 'pypy3')) }}
             : - task: UsePythonVersion@0
                 displayName: ${{ format('provision target test python {0}', job.key) }}
                 inputs:
@@ -83,10 +88,6 @@ jobs:
                   ${{ if not(job.value.py) }}:
                     ${{ if or(eq(job.key, 'py27'), startsWith(job.key, 'py27-')) }}:
                       versionSpec: "2.7"
-                    ${{ if or(eq(job.key, 'py34'), startsWith(job.key, 'py34-')) }}:
-                      versionSpec: "3.4"
-                    ${{ if or(eq(job.key, 'py35'), startsWith(job.key, 'py35-')) }}:
-                      versionSpec: "3.5"
                     ${{ if or(eq(job.key, 'py36'), startsWith(job.key, 'py36-')) }}:
                       versionSpec: "3.6"
                     ${{ if or(eq(job.key, 'py37'), startsWith(job.key, 'py37-')) }}:
@@ -95,6 +96,8 @@ jobs:
                       versionSpec: "3.8"
                     ${{ if or(eq(job.key, 'py39'), startsWith(job.key, 'py39-')) }}:
                       versionSpec: "3.9"
+                    ${{ if or(eq(job.key, 'py310'), startsWith(job.key, 'py310-')) }}:
+                      versionSpec: "3.10"
                     ${{ if or(eq(job.key, 'pypy'), startsWith(job.key, 'pypy-')) }}:
                       versionSpec: "pypy2"
                     ${{ if or(eq(job.key, 'pypy3'), startsWith(job.key, 'pypy3-')) }}:
@@ -105,12 +108,6 @@ jobs:
                 displayName: "provision target test python via homebrew python@3"
               - script: echo "##vso[task.setvariable variable=PATH]/usr/local/opt/python@3:$(PATH)"
                 displayName: add python@3 to PATH
-          - ${{ if or(eq(job.key, 'py310'), startsWith(job.key, 'py310-')) }}:
-              - script: |
-                  sudo add-apt-repository ppa:deadsnakes
-                  sudo apt-get update
-                  sudo apt-get install -y --no-install-recommends python3.10-dev python3.10-venv python3.10-distutils
-                displayName: "provision python 3.10"
           - ${{ if or(eq(job.key, 'jython'), startsWith(job.key, 'jython-')) }}:
               - script:
                   wget
